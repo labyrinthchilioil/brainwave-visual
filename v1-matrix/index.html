@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream of Consciousness: Brainwave Behavioral Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+       
+        body {
+            background-color: #f5f5f7;
+            overflow: hidden;
+            font-family: 'Space Mono', monospace;
+            color: #1a1a1a;
+        }
+        canvas {
+            image-rendering: pixelated;
+        }
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid #eee;
+            z-index: 50;
+        }
+        .upload-zone {
+            border: 2px dashed #ddd;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover {
+            border-color: #000;
+            background: #fff;
+        }
+        input[type="range"] {
+            accent-color: #000;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="fixed top-8 left-8 p-6 controls rounded-2xl shadow-2xl w-80">
+        <h1 class="text-xs font-bold tracking-[0.2em] uppercase mb-2 text-black border-b border-gray-100 pb-2">
+            Brainwave Behavioral V1.6
+        </h1>
+        <p class="text-[8px] text-gray-400 mb-6 tracking-widest uppercase">
+            State Feature Mapping System
+        </p>
+
+        <div class="space-y-6">
+            <div>
+                <div class="flex justify-between text-[10px] mb-2 font-bold text-gray-600">
+                    <span>Pixel Grid Size</span>
+                    <span id="pixelSizeDisp">24</span>
+                </div>
+                <input type="range" id="pixelSize" min="4" max="80" step="4" value="24" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div>
+                <div class="flex justify-between text-[10px] mb-2 font-bold text-gray-600">
+                    <span>Behavior Sensitivity</span>
+                    <span id="gainDisp">5.0</span>
+                </div>
+                <input type="range" id="dataGain" min="1" max="20" step="0.5" value="5.0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="pt-2">
+                <label class="upload-zone block w-full text-center py-5 rounded-xl cursor-pointer transition bg-gray-50/50">
+                    <span id="uploadStatus" class="text-[9px] font-bold text-gray-600 tracking-widest uppercase">
+                        Import Behavioral CSV Data
+                    </span>
+                    <input type="file" id="csvFile" accept=".csv" class="hidden">
+                </label>
+            </div>
+
+            <button id="clearBtn" class="w-full py-3 bg-black text-white text-[9px] hover:bg-gray-800 transition uppercase tracking-[0.2em] font-bold rounded-xl shadow-lg">
+                Reset Canvas
+            </button>
+        </div>
+
+        <!-- Behavioral Feature Monitor -->
+        <div id="monitor" class="mt-8 grid grid-cols-5 gap-1.5 h-16 items-end bg-white p-2 rounded-lg border border-gray-50 shadow-inner">
+            <div id="m-Delta" class="bg-[#4B0082] rounded-t-sm" title="Delta: Sleep / Restoration"></div>
+            <div id="m-Theta" class="bg-[#00CED1] rounded-t-sm" title="Theta: Subconscious / Dream State"></div>
+            <div id="m-Alpha" class="bg-[#32CD32] rounded-t-sm" title="Alpha: Relaxation / Stability"></div>
+            <div id="m-Beta" class="bg-[#FFD700] rounded-t-sm" title="Beta: Focus / Thinking"></div>
+            <div id="m-Gamma" class="bg-[#FF4500] rounded-t-sm" title="Gamma: High-Level Integration"></div>
+        </div>
+        <div class="grid grid-cols-5 gap-1.5 mt-2 text-[6px] font-bold text-gray-400 text-center uppercase">
+            <span>δ</span>
+            <span>θ</span>
+            <span>α</span>
+            <span>β</span>
+            <span>γ</span>
+        </div>
+    </div>
+
+    <canvas id="mainCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const pixelSizeInput = document.getElementById('pixelSize');
+        const gainInput = document.getElementById('dataGain');
+        const csvFileInput = document.getElementById('csvFile');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let brainData = [];
+        let dataIndex = 0;
+        let frameCount = 0;
+       
+        const bandConfigs = [
+            { id: 'Delta', color: '#4B0082', type: 'cloud', x: 0.3, y: 0.4 },
+            { id: 'Theta', color: '#00CED1', type: 'ink', x: 0.7, y: 0.3 },
+            { id: 'Alpha', color: '#32CD32', type: 'grid', x: 0.5, y: 0.5 },
+            { id: 'Beta', color: '#FFD700', type: 'scratch', x: 0.3, y: 0.7 },
+            { id: 'Gamma', color: '#FF4500', type: 'flash', x: 0.7, y: 0.6 }
+        ];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.fillStyle = '#f5f5f7';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawBehavioral(row) {
+            const pSize = parseInt(pixelSizeInput.value);
+            const gain = parseFloat(gainInput.value);
+            document.getElementById('pixelSizeDisp').innerText = pSize;
+            document.getElementById('gainDisp').innerText = gain.toFixed(1);
+
+            bandConfigs.forEach(config => {
+                let val = (row[config.id] || 0) * gain;
+                val = Math.min(val, 20);
+
+                const monitorBar = document.getElementById(`m-${config.id}`);
+                if (monitorBar) {
+                    monitorBar.style.height = Math.min(val * 5, 100) + '%';
+                }
+
+                if (val > 0.2) {
+                    const cx = config.x * canvas.width;
+                    const cy = config.y * canvas.height;
+
+                    const px = Math.floor((cx + (Math.random() - 0.5) * val * 800) / pSize) * pSize;
+                    const py = Math.floor((cy + (Math.random() - 0.5) * val * 800) / pSize) * pSize;
+
+                    ctx.fillStyle = config.color;
+
+                    switch(config.type) {
+                        case 'cloud':
+                            ctx.globalAlpha = 0.15;
+                            const size = Math.floor((val * 150) / pSize) * pSize;
+                            ctx.fillRect(px - size/2, py - size/2, size, size);
+                            break;
+
+                        case 'ink':
+                            ctx.globalAlpha = 0.25;
+                            const r = Math.floor((val * 60) / pSize) * pSize;
+                            ctx.beginPath();
+                            ctx.arc(px, py, r, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+
+                        case 'grid':
+                            ctx.globalAlpha = 0.4;
+                            const aw = Math.floor((val * 120) / pSize) * pSize;
+                            const ah = pSize;
+                            ctx.fillRect(px - aw/2, py, aw, ah);
+                            break;
+
+                        case 'scratch':
+                            ctx.globalAlpha = 0.5;
+                            const bh = Math.floor((val * 100) / pSize) * pSize;
+                            ctx.fillRect(px, py - bh/2, pSize/2, bh);
+                            break;
+
+                        case 'flash':
+                            ctx.globalAlpha = 0.8;
+                            const fs = Math.max(2, pSize / 4);
+                            ctx.fillRect(px, py, fs, fs);
+                            if (val > 2) {
+                                ctx.fillRect(px + pSize, py - pSize, fs, fs);
+                                ctx.fillRect(px - pSize, py + pSize, fs, fs);
+                            }
+                            break;
+                    }
+                }
+            });
+        }
+
+        function animate() {
+            if (brainData.length > 0 && frameCount % 3 === 0) {
+                drawBehavioral(brainData[dataIndex]);
+                dataIndex = (dataIndex + 1) % brainData.length;
+            }
+            frameCount++;
+            requestAnimationFrame(animate);
+        }
+
+        csvFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            uploadStatus.innerText = "Mapping Behavior...";
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const lines = event.target.result.split('\n');
+                if (lines.length < 2) return;
+
+                const headers = lines[0].split(',');
+                const getIdx = (name) =>
+                    headers.findIndex(h => h.trim().toLowerCase().includes(name.toLowerCase()));
+
+                const indices = {
+                    Delta: getIdx('Delta'),
+                    Theta: getIdx('Theta'),
+                    Alpha: getIdx('Alpha'),
+                    Beta: getIdx('Beta'),
+                    Gamma: getIdx('Gamma')
+                };
+
+                brainData = lines.slice(1).map(l => {
+                    const c = l.split(',');
+                    return {
+                        Delta: parseFloat(c[indices.Delta]) || 0,
+                        Theta: parseFloat(c[indices.Theta]) || 0,
+                        Alpha: parseFloat(c[indices.Alpha]) || 0,
+                        Beta: parseFloat(c[indices.Beta]) || 0,
+                        Gamma: parseFloat(c[indices.Gamma]) || 0
+                    };
+                }).filter(d => !isNaN(d.Delta));
+
+                dataIndex = 0;
+                uploadStatus.innerText = "Mapping Activated (Layering)";
+                uploadStatus.style.color = "#32CD32";
+            };
+            reader.readAsText(file);
+        };
+
+        clearBtn.onclick = initCanvas;
+        window.onresize = initCanvas;
+        initCanvas();
+        animate();
+    </script>
+</body>
+</html>
