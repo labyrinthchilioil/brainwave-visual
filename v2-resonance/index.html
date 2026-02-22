@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream of Consciousness: Brainwave Behavioral Matrix V5 - Deep Resonance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+       
+        body {
+            background-color: #050508;
+            overflow: hidden;
+            font-family: 'Space Mono', monospace;
+            color: #e0e0e0;
+        }
+        canvas {
+            image-rendering: auto;
+        }
+        .ui-panel {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.08);
+            z-index: 50;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+        .pattern-card {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s ease;
+        }
+        .pattern-card:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+        input[type="range"] {
+            accent-color: #818cf8;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- UI Control Panel -->
+    <div class="fixed top-6 left-6 p-6 ui-panel rounded-[2rem] w-80">
+        <h1 class="text-xs font-bold tracking-[0.4em] uppercase mb-1 text-indigo-400">Neural Dynamic V5.0</h1>
+        <p class="text-[8px] text-gray-500 mb-6 tracking-widest uppercase italic">Resonance & Fluid Morphing</p>
+
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between text-[9px] mb-2 font-bold text-gray-400 uppercase">
+                    <span>Grid Density</span>
+                    <span id="resDisp">40px</span>
+                </div>
+                <input type="range" id="resolution" min="20" max="80" step="2" value="40" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div>
+                <div class="flex justify-between text-[9px] mb-2 font-bold text-gray-400 uppercase">
+                    <span>Power Gain</span>
+                    <span id="gainDisp">10.0</span>
+                </div>
+                <input type="range" id="dataGain" min="1" max="40" step="1" value="10" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="pt-2">
+                <label class="block w-full text-center py-4 rounded-2xl cursor-pointer transition bg-indigo-500/5 border border-indigo-500/20 hover:bg-indigo-500/15 group">
+                    <span id="uploadStatus" class="text-[9px] font-bold text-indigo-300 group-hover:text-white tracking-widest uppercase">
+                        CONNECT DATA STREAM
+                    </span>
+                    <input type="file" id="csvFile" accept=".csv" class="hidden">
+                </label>
+            </div>
+
+            <!-- Pattern Guide -->
+            <div class="space-y-2 mt-4">
+                <div class="pattern-card flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-[#4B0082] blur-[2px]"></div>
+                    <div class="text-[9px] font-bold tracking-tighter">DELTA: Deep Flow Field / Restoration</div>
+                </div>
+                <div class="pattern-card flex items-center gap-3">
+                    <div class="w-3 h-3 bg-[#00CED1] scale-y-50"></div>
+                    <div class="text-[9px] font-bold tracking-tighter">THETA: Ribbon Resonance / Meditation</div>
+                </div>
+                <div class="pattern-card flex items-center gap-3">
+                    <div class="w-3 h-3 border border-[#32CD32] rotate-45"></div>
+                    <div class="text-[9px] font-bold tracking-tighter">ALPHA: Ripple Lattice / Relaxation</div>
+                </div>
+                <div class="pattern-card flex items-center gap-3">
+                    <div class="w-3 h-1 bg-[#FFD700] skew-x-12"></div>
+                    <div class="text-[9px] font-bold tracking-tighter">BETA: Oscillatory Pulse / Cognition</div>
+                </div>
+                <div class="pattern-card flex items-center gap-3">
+                    <div class="w-3 h-3 bg-white shadow-[0_0_8px_#FF4500]"></div>
+                    <div class="text-[9px] font-bold tracking-tighter">GAMMA: Quantum Burst / Insight</div>
+                </div>
+            </div>
+
+            <button id="clearBtn" class="w-full py-4 bg-indigo-600 text-white text-[9px] hover:bg-indigo-500 transition uppercase tracking-[0.2em] font-bold rounded-2xl shadow-xl mt-2">
+                Flush Buffer
+            </button>
+        </div>
+    </div>
+
+    <canvas id="mainCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const resInput = document.getElementById('resolution');
+        const gainInput = document.getElementById('dataGain');
+        const csvFileInput = document.getElementById('csvFile');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let brainData = [];
+        let dataIndex = 0;
+        let time = 0;
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawNeuralV5(row) {
+            const res = parseInt(resInput.value);
+            const gain = parseFloat(gainInput.value);
+           
+            document.getElementById('resDisp').innerText = res + "px";
+            document.getElementById('gainDisp').innerText = gain.toFixed(1);
+
+            const samples = 15;
+            time += 0.05;
+
+            for(let s=0; s<samples; s++) {
+                const tx = Math.floor(Math.random() * (canvas.width / res)) * res;
+                const ty = Math.floor(Math.random() * (canvas.height / res)) * res;
+                const centerX = tx + res/2;
+                const centerY = ty + res/2;
+
+                // 1. Delta: Dynamic Fluid Fog
+                let dVal = (row.Delta || 0) * gain;
+                if (dVal > 1) {
+                    const drift = Math.sin(time * 0.5) * 10;
+                    const g = ctx.createRadialGradient(centerX + drift, centerY, 0, centerX + drift, centerY, dVal * 15);
+                    g.addColorStop(0, 'rgba(75, 0, 130, 0.15)');
+                    g.addColorStop(1, 'rgba(75, 0, 130, 0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(centerX + drift, centerY, dVal * 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // 2. Theta: Composite Ribbon Bundle
+                let tVal = (row.Theta || 0) * gain;
+                if (tVal > 2) {
+                    ctx.strokeStyle = '#00CED1';
+                    ctx.lineWidth = 0.5;
+                    ctx.globalAlpha = 0.3;
+                    for(let r=0; r<3; r++) {
+                        ctx.beginPath();
+                        for(let i=0; i<res; i++) {
+                            const phase = (time + r) * 2;
+                            const sinY = Math.sin((i / res) * Math.PI * 2 + phase) * tVal;
+                            ctx.lineTo(tx + i, ty + res/2 + sinY);
+                        }
+                        ctx.stroke();
+                    }
+                }
+
+                // 3. Alpha: Expanding Ripples
+                let aVal = (row.Alpha || 0) * gain;
+                if (aVal > 3) {
+                    ctx.strokeStyle = '#32CD32';
+                    ctx.globalAlpha = 0.4;
+                    ctx.lineWidth = 1;
+                    const pulse = (time * 5) % (res * 0.8);
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, pulse * (aVal/10), 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Stable diamond core
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - 4);
+                    ctx.lineTo(centerX + 4, centerY);
+                    ctx.lineTo(centerX, centerY + 4);
+                    ctx.lineTo(centerX - 4, centerY);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+
+                // 4. Beta: High-Frequency Glitch Pulse
+                let bVal = (row.Beta || 0) * gain;
+                if (bVal > 2) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.globalAlpha = 0.6;
+                    const jitter = Math.sin(time * 20) * 2;
+                    const h = bVal * 6;
+                    ctx.fillRect(centerX - 1 + jitter, centerY - h/2, 2, h);
+
+                    if(bVal > 5) {
+                        ctx.globalAlpha = 0.2;
+                        ctx.fillRect(centerX - 6 + jitter, centerY - h/4, 1, h/2);
+                        ctx.fillRect(centerX + 6 + jitter, centerY - h/4, 1, h/2);
+                    }
+                }
+
+                // 5. Gamma: Spark Burst
+                let gVal = (row.Gamma || 0) * gain;
+                if (gVal > 1) {
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#FF4500';
+                    ctx.globalAlpha = 1.0;
+                    for(let p=0; p<4; p++) {
+                        const angle = time * 10 + (p * Math.PI/2);
+                        const px = centerX + Math.cos(angle) * gVal * 2;
+                        const py = centerY + Math.sin(angle) * gVal * 2;
+                        ctx.fillRect(px, py, 1.5, 1.5);
+                    }
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // Global fade layer
+            ctx.fillStyle = 'rgba(5, 5, 8, 0.015)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function animate() {
+            if (brainData.length > 0) {
+                drawNeuralV5(brainData[dataIndex]);
+                dataIndex = (dataIndex + 1) % brainData.length;
+            } else {
+                // Subtle idle background animation when no data
+                ctx.fillStyle = 'rgba(5, 5, 8, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        csvFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            uploadStatus.innerText = "PARSING STREAM...";
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const lines = event.target.result.split('\n');
+                if (lines.length < 2) return;
+                const headers = lines[0].split(',');
+                const getIdx = (name) => headers.findIndex(h => h.trim().toLowerCase().includes(name.toLowerCase()));
+                const indices = { Delta: getIdx('Delta'), Theta: getIdx('Theta'), Alpha: getIdx('Alpha'), Beta: getIdx('Beta'), Gamma: getIdx('Gamma') };
+                brainData = lines.slice(1).map(l => {
+                    const c = l.split(',');
+                    return {
+                        Delta: parseFloat(c[indices.Delta]) || 0,
+                        Theta: parseFloat(c[indices.Theta]) || 0,
+                        Alpha: parseFloat(c[indices.Alpha]) || 0,
+                        Beta: parseFloat(c[indices.Beta]) || 0,
+                        Gamma: parseFloat(c[indices.Gamma]) || 0
+                    };
+                }).filter(d => !isNaN(d.Delta));
+                dataIndex = 0;
+                uploadStatus.innerText = "STREAM SYNCED";
+                uploadStatus.style.color = "#818cf8";
+                initCanvas();
+            };
+            reader.readAsText(file);
+        };
+
+        clearBtn.onclick = initCanvas;
+        window.onresize = initCanvas;
+        initCanvas();
+        animate();
+    </script>
+</body>
+</html>
