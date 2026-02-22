@@ -13,7 +13,7 @@ https://labyrinthchilioil.github.io/brainwave-visual/v1-matrix/
 
 ---
 
-## Version 5 – Resonant Field
+## Version 2 – Resonant Field
 A fluid, time-based morphogenetic visualization of EEG activity.
 Focuses on dynamic resonance and continuous field transformation.
 
