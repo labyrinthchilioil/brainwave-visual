@@ -305,7 +305,7 @@
             const basePSize = parseInt(pixelSizeInput.value);
             const gain = parseFloat(gainInput.value);
         
-            // Calculate total brainwave intensity and control dynamic pixel size
+            // Calculate total brainwave intensity for dynamic pixel size control
             let totalActivity = bandConfigs.reduce((sum, c) => sum + (smoothedData[c.id] || 0), 0);
             let intensityFactor = Math.max(0.1, Math.min(8.0, 0.5 + totalActivity * gain * 0.15));
             let targetPSize = basePSize * intensityFactor;
@@ -336,43 +336,38 @@
                 switch(config.type) {
                     case 'cloud': // Delta: Large square
                         ctx.globalAlpha = 0.15;
-                        let s = Math.max(1, Math.round((val * 150) / pSize) * pSize);
+                        let s = Math.max(pSize, Math.round((val * 150) / pSize) * pSize);
                         ctx.fillRect(px - s/2, py - s/2, s, s);
                         break;
         
                     case 'ink': // Theta: Circle
                         ctx.globalAlpha = 0.25;
-                        let r = Math.max(1, Math.round((val * 60) / pSize) * pSize);
+                        let r = Math.max(pSize, Math.round((val * 60) / pSize) * pSize);
                         ctx.beginPath();
-                        ctx.arc(px, py, r, 0, Math.PI*2);
+                        ctx.arc(px, py, r, 0, Math.PI * 2);
                         ctx.fill();
                         break;
         
                     case 'grid': // Alpha: horizontal bar
                         ctx.globalAlpha = 0.4;
-                        let aw = Math.max(1, Math.round((val * 120) / pSize) * pSize);
+                        let aw = Math.max(pSize, Math.round((val * 120) / pSize) * pSize);
                         ctx.fillRect(px - aw/2, py, aw, pSize);
                         break;
         
                     case 'scratch': // Beta: Vertical bar
                         ctx.globalAlpha = 0.5;
-                        let bh = Math.max(1, Math.round((val * 100) / pSize) * pSize);
-                        ctx.fillRect(px, py - bh/2, Math.max(1, Math.round(pSize/2)), bh);
+                        let bh = Math.max(pSize, Math.round((val * 100) / pSize) * pSize);
+                        ctx.fillRect(px, py - bh/2, pSize, bh);
                         break;
         
                     case 'flash': // Gamma: dotted
                         ctx.globalAlpha = 0.8;
+                        let fs = Math.max(pSize, Math.round((val * 10) / pSize) * pSize); // Strict pSize multiple
         
-                        // Dynamic size, minimum 20px, ensuring grid multiple.
-                        let fs = Math.max(20, Math.round((val * 10)) ); // The larger the val, the larger the dot.
-                        fs = Math.round(fs / pSize) * pSize;
-        
-                        // Strict alignment of principal points
                         const fx = Math.round(px / pSize) * pSize;
                         const fy = Math.round(py / pSize) * pSize;
                         ctx.fillRect(fx, fy, fs, fs);
         
-                        // Additional flash points are also gridded
                         if(val > 2) {
                             const fx2 = Math.round((px + pSize) / pSize) * pSize;
                             const fy2 = Math.round((py - pSize) / pSize) * pSize;
