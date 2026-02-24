@@ -198,7 +198,7 @@
                 this.index = 0;
                 this.smoothed = { Delta:0, Theta:0, Alpha:0, Beta:0, Gamma:0 };
                 this.lerpFactor = 0.12;
-                this.isSimulating = true;
+                this.isSimulating = false;
             }
 
             load(data){
@@ -210,7 +210,7 @@
             reset() {
                 this.raw = [];
                 this.index = 0;
-                this.isSimulating = true;
+                this.isSimulating = false;
                 Object.keys(this.smoothed).forEach(k => this.smoothed[k] = 0);
             }
 
