@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream of Consciousness: Brainwave Behavioral Matrixn</title>
+    <title>Stream of Consciousness: Brainwave Behavioral Matrix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-
+        
         body {
             background-color: #f5f5f7;
             overflow: hidden;
@@ -18,32 +18,64 @@
         }
         canvas {
             display: block;
-            image-rendering: pixelated;
+            image-rendering: pixelated; /* Sharpens pixel edges for aesthetic effect */
         }
+        /* Dashboard Styling */
         .bottom-dock {
             position: fixed;
             bottom: 1.5rem;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 2rem;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
             z-index: 100;
-            width: 96vw;
-            max-width: 1250px;
-            display: flex;
-            padding: 1.5rem;
-            gap: 2rem;
+            width: 92vw;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 200px 1fr 280px;
+            padding: 1.25rem 1.75rem;
+            gap: 1.5rem;
             align-items: center;
+            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        .monitor-container {
-            flex: 1.5;
-            height: 160px;
-            position: relative;
-            background: rgba(0, 0, 0, 0.03);
+        .bottom-dock.hidden-panel {
+            transform: translate(-50%, 160%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* UI Toggle Button */
+        .toggle-ui-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 110;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
             border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 0;
+        }
+        .toggle-ui-btn:hover {
+            background: #fff;
+            transform: scale(1.1);
+        }
+        /* Spectral Monitor Background */
+        .monitor-container {
+            height: 100px;
+            position: relative;
+            background: rgba(0, 0, 0, 0.03); 
+            border: 1px solid rgba(0, 0, 0, 0.02);
             border-radius: 1rem;
             overflow: hidden;
         }
@@ -53,142 +85,114 @@
         }
         input[type="range"] {
             accent-color: #000;
+            height: 3px;
         }
         .band-legend {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px 12px;
-            font-size: 9px;
-            font-weight: bold;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px 8px;
+            font-size: 8px;
+            font-weight: 700;
             text-transform: uppercase;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            color: #666;
+            white-space: nowrap;
         }
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 2px;
         }
-        .btn-action {
-            transition: all 0.2s ease;
-        }
+        /* Recording Animation */
         .recording-glow {
-            animation: record-pulse 1.5s infinite;
-            background-color: #ef4444 !important;
+            animation: record-pulse 2s infinite;
+            background-color: #f43f5e !important;
         }
         @keyframes record-pulse {
-            0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); }
+            0% { box-shadow: 0 0 0 0px rgba(244, 63, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(244, 63, 94, 0); }
         }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-
-    <!-- Primary Art Canvas -->
     <canvas id="mainCanvas"></canvas>
 
+    <!-- UI Visibility Toggle -->
+    <div id="toggleUI" class="toggle-ui-btn" title="Toggle UI Panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
 
-    <div class="bottom-dock">
-        <!-- Control Group -->
-        <div class="flex flex-col gap-3 min-w-[240px]">
+    <div class="bottom-dock" id="bottomDock">
+        <!-- Dashboard Left: Branding & Core Settings -->
+        <div class="flex flex-col gap-2">
             <div>
-                <h1 class="text-[11px] font-bold tracking-[0.2em] uppercase text-black">
-                    Brainwave Behavioral Matrix
-                </h1>
-                <p class="text-[8px] text-gray-400 tracking-widest uppercase">
-                    Higher Activity -> Larger Pixels
-                </p>
+                <h1 class="text-[10px] font-bold tracking-[0.1em] uppercase text-black">Brainwave Behavioral Matrix</h1>
+                <p class="text-[8px] text-gray-400 font-bold tracking-[0.2em] uppercase">A EEG Status Mapping System by ZOE</p>
             </div>
-
-            <div class="flex flex-col gap-2">
-                <div class="flex justify-between text-[9px] font-bold text-gray-500 uppercase">
-                    <span>Grid Base: <span id="pixelSizeDisp" class="text-black">20</span></span>
-                    <span>Gain: <span id="gainDisp" class="text-black">4.0</span></span>
+            
+            <div class="flex flex-col gap-1.5">
+                <div class="space-y-0.5">
+                    <div class="flex justify-between text-[7px] font-bold text-gray-400 uppercase">
+                        <span>Grid <span id="pixelSizeDisp" class="text-black">20px</span></span>
+                        <span>Sensitivity <span id="gainDisp" class="text-black">5.0</span></span>
+                    </div>
+                    <input type="range" id="pixelSize" min="4" max="80" step="4" value="24" class="w-full appearance-none bg-gray-200 rounded-full cursor-pointer">
+                    <input type="range" id="dataGain" min="1" max="20" step="0.5" value="5.0" class="w-full appearance-none bg-gray-200 rounded-full cursor-pointer">
                 </div>
-                <input type="range" id="pixelSize" min="4" max="48" step="4" value="20" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                <input type="range" id="dataGain" min="0.1" max="15" step="0.5" value="4.0" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-
-                <div class="flex justify-between text-[9px] font-bold text-gray-500 uppercase mt-1">
-                    <span>Speed Skip: <span id="speedDisp" class="text-black">100</span></span>
+                <div class="space-y-0.5">
+                    <div class="flex justify-between text-[7px] font-bold text-gray-400 uppercase">
+                        <span>Speed <span id="speedDisp" class="text-black">100</span></span>
+                    </div>
+                    <input type="range" id="playSpeed" min="1" max="500" step="1" value="100" class="w-full appearance-none bg-gray-200 rounded-full cursor-pointer">
                 </div>
-                <input type="range" id="playSpeed" min="1" max="500" step="1" value="100" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
             </div>
         </div>
 
-
-        <!-- Spectral Feed (Transparent) -->
+        <!-- Dashboard Middle: Spectral Monitor -->
         <div class="monitor-container">
             <canvas id="spectralCanvas"></canvas>
-            <div class="absolute top-2 left-2 text-[7px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">
-                EEG SPECTRAL ACTIVITY DISPLAY
+            <div class="absolute top-1.5 left-2.5 text-[7px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">
+                Spectral Feed
             </div>
         </div>
 
-
-        <!-- Recording & Band Info -->
-        <div class="flex flex-col gap-3 min-w-[220px]">
-            <button id="recordBtn" class="btn-action w-full py-3 bg-black text-white text-[10px] uppercase font-bold rounded-xl hover:opacity-80">
-                Start Recording
-            </button>
-
-            <div class="flex gap-2">
-                <label class="flex-1 text-center py-2 rounded-xl cursor-pointer transition bg-gray-100 hover:bg-gray-200 border border-gray-200">
-                    <span id="uploadStatus" class="text-[9px] font-bold text-gray-600 uppercase">Import CSV</span>
-                    <input type="file" id="csvFile" accept=".csv" class="hidden">
-                </label>
-                <button id="clearBtn" class="flex-1 py-2 bg-gray-100 text-gray-600 text-[9px] uppercase font-bold rounded-xl border border-gray-200">Reset</button>
+        <!-- Dashboard Right: Controls & Legend -->
+        <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+                <button id="recordBtn" class="btn-main w-full py-1.5 bg-black text-white text-[9px] uppercase font-bold rounded-lg hover:bg-gray-800">
+                    Record
+                </button>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <label class="text-center py-1 rounded-lg cursor-pointer transition bg-white border border-gray-100 hover:border-gray-200">
+                        <span id="uploadStatus" class="text-[8px] font-bold text-gray-600 uppercase">Import CSV</span>
+                        <input type="file" id="csvFile" accept=".csv" class="hidden">
+                    </label>
+                    <button id="clearBtn" class="py-1 bg-white text-gray-600 text-[8px] uppercase font-bold rounded-lg border border-gray-100 hover:border-gray-200">Reset Canvas</button>
+                </div>
             </div>
 
-
-            <div class="band-legend">
-                <div class="legend-item"><div class="dot bg-[#4B0082]"></div>Delta</div>
-                <div class="legend-item"><div class="dot bg-[#00CED1]"></div>Theta</div>
-                <div class="legend-item"><div class="dot bg-[#32CD32]"></div>Alpha</div>
-                <div class="legend-item"><div class="dot bg-[#FFD700]"></div>Beta</div>
-                <div class="legend-item"><div class="dot bg-[#FF4500]"></div>Gamma</div>
+            <div class="band-legend p-2 bg-gray-100/40 rounded-xl border border-white/50">
+                <div class="legend-item"><div class="dot bg-[#4B0082]"></div>δ Delta</div>
+                <div class="legend-item"><div class="dot bg-[#00CED1]"></div>θ Theta</div>
+                <div class="legend-item"><div class="dot bg-[#32CD32]"></div>α Alpha</div>
+                <div class="legend-item"><div class="dot bg-[#FFD700]"></div>β Beta</div>
+                <div class="legend-item"><div class="dot bg-[#FF4500]"></div>γ Gamma</div>
             </div>
         </div>
     </div>
 
-
     <script>
-        /* ==========================================================
-        STREAM OF CONSCIOUSNESS
-        Brainwave Behavioral Matrix Engine
-        ----------------------------------------------------------
-        SYSTEM OVERVIEW
-
-        This system transforms EEG spectral band activity
-        (Delta, Theta, Alpha, Beta, Gamma) into a spatial,
-        procedural, pixel-based behavioral composition.
-
-        Pipeline Architecture:
-
-        1. CSV Data Ingestion
-        2. Temporal Frame Sampling + Speed Skipping
-        3. Lerp-Based Signal Smoothing
-        4. Spectral History Buffer Rendering
-        5. Spatial Behavioral Mark-Making Engine
-        6. Canvas Capture + WebM Recording
-
-        Design Principle:
-        Neural intensity modulates spatial density and pixel scale.
-        Higher global activity → larger dynamic grid structures.
-        ========================================================== */
-
-
-        /* ==========================================================
-        DOM REFERENCES
-        ---------------------------------------------------------- */
-
+        /**
+         * Global Configuration and State
+         */
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
-
         const spectralCanvas = document.getElementById('spectralCanvas');
         const sCtx = spectralCanvas.getContext('2d');
 
@@ -199,359 +203,294 @@
         const recordBtn = document.getElementById('recordBtn');
         const uploadStatus = document.getElementById('uploadStatus');
         const clearBtn = document.getElementById('clearBtn');
+        const toggleUIBtn = document.getElementById('toggleUI');
+        const bottomDock = document.getElementById('bottomDock');
 
+        let rawBrainData = []; // Array of CSV parsed data
+        let smoothedData = { Delta: 0, Theta: 0, Alpha: 0, Beta: 0, Gamma: 0 }; // LERP-smoothed values
+        let history = []; // Historical data points for the spectral feed
+        let dataPointer = 0; // Current index in rawBrainData
+        let lastTimestamp = 0; // Throttling helper for animation loop
+        const maxHistory = 150; // Max points shown in spectral feed
+        const lerpFactor = 0.12; // Lower = smoother transitions, Higher = more responsive
+        let currentDynamicPSize = 24; // Current pixel size influenced by intensity
 
-        /* ==========================================================
-        STATE VARIABLES
-        ---------------------------------------------------------- */
-
-        // Raw EEG frames loaded from CSV
-        let rawBrainData = [];
-
-        // Smoothed signal state (temporal interpolation target)
-        let smoothedData = {
-            Delta: 0,
-            Theta: 0,
-            Alpha: 0,
-            Beta: 0,
-            Gamma: 0
-        };
-
-        // Rolling spectral monitor history buffer
-        let history = [];
-
-        let dataPointer = 0;
-        let lastTimestamp = 0;
-
-        // Max spectral history length
-        const maxHistory = 150;
-
-        // Linear interpolation factor (signal smoothing strength)
-        const lerpFactor = 0.12;
-
-        // Dynamically modulated pixel grid size
-        let currentDynamicPSize = 20;
-
-
-        /* ==========================================================
-        RECORDING SUBSYSTEM
-        ----------------------------------------------------------
-        Captures canvas stream (30fps)
-        Encodes using VP9
-        Exports downloadable WebM file
-        ========================================================== */
-
+        // Recording state
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
 
-
-        /* ==========================================================
-        EEG BAND SPATIAL CONFIGURATION
-        ----------------------------------------------------------
-        Each band is anchored to a fixed normalized position.
-        type defines procedural behavior logic.
-        ========================================================== */
-
+        /**
+         * Mapping band IDs to aesthetic behaviors and coordinates
+         */
         const bandConfigs = [
-            { id: 'Delta', color: '#4B0082', type: 'cloud',   x: 0.15, y: 0.2 },
-            { id: 'Theta', color: '#00CED1', type: 'ink',     x: 0.85, y: 0.2 },
-            { id: 'Alpha', color: '#32CD32', type: 'grid',    x: 0.5,  y: 0.5 },
-            { id: 'Beta',  color: '#FFD700', type: 'scratch', x: 0.15, y: 0.8 },
-            { id: 'Gamma', color: '#FF4500', type: 'flash',   x: 0.85, y: 0.8 }
+            { id: 'Delta', color: '#4B0082', type: 'cloud',   x: 0.3, y: 0.4 }, // Deep sleep/Deep repair
+            { id: 'Theta', color: '#00CED1', type: 'ink',     x: 0.7, y: 0.3 }, // Subconscious/Dreaming
+            { id: 'Alpha', color: '#32CD32', type: 'grid',    x: 0.5, y: 0.5 }, // Relaxation/Stability
+            { id: 'Beta',  color: '#FFD700', type: 'scratch', x: 0.3, y: 0.7 }, // Focus/Thinking
+            { id: 'Gamma', color: '#FF4500', type: 'flash',   x: 0.7, y: 0.6 }  // High-level integration
         ];
 
-
-        /* ==========================================================
-        CANVAS INITIALIZATION
-        ---------------------------------------------------------- */
-
+        /**
+         * Setup or Resize canvases
+         */
         function initCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-
             spectralCanvas.width = spectralCanvas.offsetWidth;
             spectralCanvas.height = spectralCanvas.offsetHeight;
-
-            ctx.fillStyle = '#f5f5f7';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-
-        /* ==========================================================
-        CSV IMPORT HANDLER
-        ----------------------------------------------------------
-        Reads and parses CSV file
-        Populates rawBrainData with EEG frame data
-        ========================================================== */
-
-        csvFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const csv = event.target.result;
-                    const lines = csv.split('\n');
-                    const header = lines[0].split(',').map(h => h.trim());
-                    
-                    rawBrainData = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        if (!lines[i].trim()) continue;
-                        
-                        const values = lines[i].split(',').map(v => parseFloat(v.trim()));
-                        const row = {};
-                        header.forEach((col, idx) => {
-                            row[col] = values[idx] || 0;
-                        });
-                        rawBrainData.push(row);
-                    }
-                    
-                    dataPointer = 0;
-                    lastTimestamp = 0;
-                    uploadStatus.innerText = `Loaded ${rawBrainData.length} frames`;
-                    console.log('CSV loaded successfully:', rawBrainData.length, 'frames');
-                } catch (error) {
-                    uploadStatus.innerText = 'Import failed';
-                    console.error('CSV parsing error:', error);
-                }
-            };
-            reader.readAsText(file);
-        });
-
-
-        /* ==========================================================
-        CLEAR/RESET HANDLER
-        ----------------------------------------------------------
-        Resets all data and clears canvas
-        ========================================================== */
-
-        clearBtn.addEventListener('click', () => {
-            rawBrainData = [];
-            dataPointer = 0;
-            lastTimestamp = 0;
-            smoothedData = {
-                Delta: 0,
-                Theta: 0,
-                Alpha: 0,
-                Beta: 0,
-                Gamma: 0
-            };
-            history = [];
-            csvFileInput.value = '';
-            uploadStatus.innerText = 'Import CSV';
             
+            // Clear main canvas with a clean gray background
             ctx.fillStyle = '#f5f5f7';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-        });
-
-
-        /* ==========================================================
-        NONLINEAR SIGNAL AMPLIFICATION
-        ----------------------------------------------------------
-        Applies gain and perceptual contrast shaping.
-        Enhances small EEG differences for visual clarity.
-        ========================================================== */
-
-        function getHighContrastValue(rawVal, gain) {
-            if (rawVal <= 0) return 0;
-
-            return Math.pow(rawVal * gain * 2.0, 1.05) * 10;
         }
 
+        /**
+         * Toggle UI Dashboard visibility
+         */
+        toggleUIBtn.addEventListener('click', () => {
+            bottomDock.classList.toggle('hidden-panel');
+            toggleUIBtn.style.opacity = bottomDock.classList.contains('hidden-panel') ? "0.6" : "1";
+        });
 
-        /* ==========================================================
-        SPECTRAL MONITOR RENDERER
-        ----------------------------------------------------------
-        Maintains rolling amplitude curves for each band.
-        ========================================================== */
+        /**
+         * Calculates Y-axis displacement for the spectral feed
+         * Uses non-linear scaling to emphasize activity
+         */
+        function getHighContrastValue(rawVal, gain, canvasHeight) {
+            if (rawVal <= 0) return 0;
+            const val = Math.pow(rawVal * gain * 1.5, 1.05) * 4.5;
+            return Math.min(val, canvasHeight * 0.85);
+        }
 
+        /**
+         * Renders the spectral line chart in the middle dock
+         */
         function updateSpectralMonitor() {
-
-            history.push({ ...smoothedData });
+            history.push({...smoothedData});
             if (history.length > maxHistory) history.shift();
-
+            
             sCtx.clearRect(0, 0, spectralCanvas.width, spectralCanvas.height);
-
             const step = spectralCanvas.width / (maxHistory - 1);
-            const baselineY = spectralCanvas.height - 20;
+            const baselineY = spectralCanvas.height - 10; 
             const gain = parseFloat(gainInput.value);
 
             bandConfigs.forEach(config => {
-
                 sCtx.beginPath();
                 sCtx.strokeStyle = config.color;
-                sCtx.lineWidth = 2.0;
-
+                sCtx.lineWidth = 2;
+                sCtx.lineJoin = 'round';
                 history.forEach((point, i) => {
-
-                    const amp = getHighContrastValue(point[config.id] || 0, gain);
+                    const amp = getHighContrastValue(point[config.id] || 0, gain, spectralCanvas.height);
                     const x = i * step;
                     const y = baselineY - amp;
-
                     if (i === 0) sCtx.moveTo(x, y);
                     else sCtx.lineTo(x, y);
                 });
-
                 sCtx.stroke();
             });
 
-            // Draw baseline reference
-            sCtx.strokeStyle = 'rgba(0,0,0,0.05)';
+            // Draw baseline
+            sCtx.strokeStyle = 'rgba(0,0,0,0.08)';
             sCtx.beginPath();
             sCtx.moveTo(0, baselineY);
             sCtx.lineTo(spectralCanvas.width, baselineY);
             sCtx.stroke();
         }
 
-
-        /* ==========================================================
-        BEHAVIORAL RENDERING ENGINE
-        ----------------------------------------------------------
-        Translates EEG amplitudes into spatial mark systems.
-        Global intensity controls dynamic pixel scaling.
-        ========================================================== */
-
+        /**
+         * Main drawing function: Converts band data into visual shapes
+         */
         function drawBehavioral() {
-
             const basePSize = parseInt(pixelSizeInput.value);
             const gain = parseFloat(gainInput.value);
-
+            
+            // Calculate total intensity to modulate the pixel grid size dynamically
             let totalActivity = 0;
-            bandConfigs.forEach(c => {
-                totalActivity += (smoothedData[c.id] || 0);
-            });
-
-            // Dynamic pixel scaling logic
+            bandConfigs.forEach(c => totalActivity += (smoothedData[c.id] || 0));
+            
             let intensityFactor = 0.5 + (totalActivity * gain * 0.15);
-            intensityFactor = Math.max(0.15, Math.min(6.0, intensityFactor));
-
+            intensityFactor = Math.max(0.1, Math.min(8.0, intensityFactor));
+            
             let targetPSize = basePSize * intensityFactor;
-
-            currentDynamicPSize +=
-                (targetPSize - currentDynamicPSize) * 0.15;
-
+            currentDynamicPSize += (targetPSize - currentDynamicPSize) * 0.15;
             const pSize = Math.max(1, Math.round(currentDynamicPSize));
 
+            // UI Label updates
             document.getElementById('pixelSizeDisp').innerText = basePSize + "px";
             document.getElementById('gainDisp').innerText = gain.toFixed(1);
             document.getElementById('speedDisp').innerText = speedInput.value;
 
             updateSpectralMonitor();
 
+            // Iterate through bands and draw their specific visual footprint
             bandConfigs.forEach(config => {
-
                 let val = (smoothedData[config.id] || 0) * gain;
-                if (val <= 0.01) return;
+                if (val > 0.005) {
+                    const cx = config.x * canvas.width;
+                    const cy = config.y * canvas.height;
+                    const spreadScale = val * 600; 
+                    
+                    // Snap coordinates to pixel grid for the "Pixelated" look
+                    const px = Math.floor((cx + (Math.random() - 0.5) * spreadScale) / pSize) * pSize;
+                    const py = Math.floor((cy + (Math.random() - 0.5) * spreadScale) / pSize) * pSize;
 
-                const cx = config.x * canvas.width;
-                const cy = config.y * canvas.height;
-
-                // Controlled radial dispersion
-                const spreadScale = val * 550;
-
-                const px = Math.floor(
-                    (cx + (Math.random() - 0.5) * spreadScale) / pSize
-                ) * pSize;
-
-                const py = Math.floor(
-                    (cy + (Math.random() - 0.5) * spreadScale) / pSize
-                ) * pSize;
-
-                ctx.fillStyle = config.color;
-
-                switch(config.type) {
-
-                    case 'cloud':
-                        ctx.globalAlpha = 0.04;
-                        ctx.fillRect(px - (val*80), py - (val*80),
-                                    val*160, val*160);
-                        break;
-
-                    case 'ink':
-                        ctx.globalAlpha = 0.1;
-                        ctx.beginPath();
-                        ctx.arc(px, py, val*40, 0, Math.PI*2);
-                        ctx.fill();
-                        break;
-
-                    case 'grid':
-                        ctx.globalAlpha = 0.22;
-                        ctx.fillRect(px - (val*120), py,
-                                    val*240, pSize);
-                        break;
-
-                    case 'scratch':
-                        ctx.globalAlpha = 0.3;
-                        ctx.fillRect(px, py - (val*100),
-                                    pSize/2, val*200);
-                        break;
-
-                    case 'flash':
-                        ctx.globalAlpha = 0.6;
-                        ctx.fillRect(px, py,
-                                    Math.max(1, pSize/2),
-                                    Math.max(1, pSize/2));
-                        break;
+                    ctx.fillStyle = config.color;
+                    switch(config.type) {
+                        case 'cloud': // Delta: Large translucent blobs
+                            ctx.globalAlpha = 0.15;
+                            const s = Math.floor((val * 150) / pSize) * pSize;
+                            ctx.fillRect(px - s/2, py - s/2, s, s);
+                            break;
+                        case 'ink': // Theta: Circular ink-like bleeds
+                            ctx.globalAlpha = 0.25; 
+                            const r = Math.floor((val * 60) / pSize) * pSize;
+                            ctx.beginPath(); 
+                            ctx.arc(px, py, r, 0, Math.PI*2); 
+                            ctx.fill(); 
+                            break;
+                        case 'grid': // Alpha: Steady horizontal structural bars
+                            ctx.globalAlpha = 0.4; 
+                            const aw = Math.floor((val * 120) / pSize) * pSize;
+                            ctx.fillRect(px - aw/2, py, aw, pSize); 
+                            break;
+                        case 'scratch': // Beta: Sharp vertical high-frequency lines
+                            ctx.globalAlpha = 0.5; 
+                            const bh = Math.floor((val * 100) / pSize) * pSize;
+                            ctx.fillRect(px, py - bh/2, pSize/2, bh); 
+                            break;
+                        case 'flash': // Gamma: Small intense pinpoints
+                            ctx.globalAlpha = 0.8; 
+                            const fs = Math.max(2, pSize / 3);
+                            ctx.fillRect(px, py, fs, fs); 
+                            if(val > 2) ctx.fillRect(px + pSize, py - pSize, fs, fs);
+                            break;
+                    }
                 }
             });
         }
 
-
-        /* ==========================================================
-        MAIN ANIMATION LOOP
-        ----------------------------------------------------------
-        Handles:
-        - Frame stepping
-        - Temporal interpolation
-        - Speed skipping
-        ========================================================== */
-
+        /**
+         * Animation Loop: Handles data LERPing and Frame scheduling
+         */
         function animate(timestamp) {
-
             if (rawBrainData.length > 0) {
-
-                if (timestamp - lastTimestamp > 30) {
-
-                    const targetFrame =
-                        rawBrainData[dataPointer];
-
+                // Throttle animation to ~30 FPS for logic stability
+                if (timestamp - lastTimestamp > 32) {
+                    const targetFrame = rawBrainData[dataPointer];
+                    
+                    // Apply Linear Interpolation (LERP) for smooth visual movement
                     bandConfigs.forEach(config => {
-
-                        const targetVal =
-                            targetFrame[config.id] || 0;
-
-                        smoothedData[config.id] +=
-                            (targetVal -
-                            smoothedData[config.id]) *
-                            lerpFactor;
+                        const targetVal = targetFrame[config.id] || 0;
+                        smoothedData[config.id] += (targetVal - smoothedData[config.id]) * lerpFactor;
                     });
-
+                    
                     drawBehavioral();
-
+                    
+                    // Move data pointer forward based on Speed setting
                     const skip = parseInt(speedInput.value);
-
-                    dataPointer =
-                        (dataPointer + skip) %
-                        rawBrainData.length;
-
+                    dataPointer = (dataPointer + skip) % rawBrainData.length;
                     lastTimestamp = timestamp;
                 }
+            } else {
+                // If no data, fade existing values back to zero (Recessional fade)
+                let hasMovement = false;
+                bandConfigs.forEach(config => {
+                    const diff = 0 - smoothedData[config.id];
+                    if (Math.abs(diff) > 0.001) {
+                        smoothedData[config.id] += diff * lerpFactor;
+                        hasMovement = true;
+                    } else {
+                        smoothedData[config.id] = 0;
+                    }
+                });
+                if (hasMovement) updateSpectralMonitor();
             }
-            else {
-                updateSpectralMonitor();
-            }
-
             requestAnimationFrame(animate);
         }
 
-        // Initialize canvas and start animation loop
-        initCanvas();
-        requestAnimationFrame(animate);
+        /**
+         * Canvas Recording Logic using MediaRecorder API
+         */
+        recordBtn.onclick = () => {
+            if (!isRecording) {
+                recordedChunks = [];
+                const stream = canvas.captureStream(30); // 30 FPS stream from canvas
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+                
+                mediaRecorder.ondataavailable = (e) => e.data.size > 0 && recordedChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `brain_matrix_${Date.now()}.webm`;
+                    a.click();
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.innerText = "Stop";
+                recordBtn.classList.add('recording-glow');
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerText = "Record";
+                recordBtn.classList.remove('recording-glow');
+            }
+        };
 
-        // Handle window resize
-        window.addEventListener('resize', initCanvas);
+        /**
+         * CSV Parsing Logic: Matches headers to Band IDs
+         */
+        csvFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            uploadStatus.innerText = "Mapping...";
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                const lines = event.target.result.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                // Fuzzy header matching
+                const getIdx = (name) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+                const indices = { 
+                    Delta: getIdx('Delta'), Theta: getIdx('Theta'), Alpha: getIdx('Alpha'), Beta: getIdx('Beta'), Gamma: getIdx('Gamma') 
+                };
+                
+                // Convert CSV rows to data objects
+                rawBrainData = lines.slice(1).map(l => {
+                    const c = l.split(',');
+                    return { 
+                        Delta: parseFloat(c[indices.Delta]) || 0, Theta: parseFloat(c[indices.Theta]) || 0, 
+                        Alpha: parseFloat(c[indices.Alpha]) || 0, Beta: parseFloat(c[indices.Beta]) || 0, 
+                        Gamma: parseFloat(c[indices.Gamma]) || 0 
+                    };
+                }).filter(d => !isNaN(d.Delta));
+                
+                dataPointer = 0;
+                uploadStatus.innerText = "Active";
+                uploadStatus.style.color = "#32CD32";
+            };
+            reader.readAsText(file);
+        };
+
+        /**
+         * Reset Canvas: Clears the drawing but preserves the current data stream
+         */
+        clearBtn.onclick = () => { 
+            ctx.fillStyle = '#f5f5f7';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        };
+        
+        // Window events
+        window.onresize = initCanvas;
+        window.onload = () => { 
+            initCanvas(); 
+            requestAnimationFrame(animate); 
+        };
     </script>
 </body>
 </html>
