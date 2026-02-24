@@ -3,103 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream of Consciousness: Brainwave Behavioral Matrix V5 - Deep Resonance</title>
+    <title>Stream of Consciousness: Brainwave Resonant Field</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-       
+        
         body {
-            background-color: #050508;
+            background-color: #020204;
             overflow: hidden;
             font-family: 'Space Mono', monospace;
-            color: #e0e0e0;
+            color: #f0f0f0;
         }
-        canvas {
-            image-rendering: auto;
-        }
-        .ui-panel {
-            background: rgba(10, 10, 15, 0.8);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.08);
+        
+        canvas { image-rendering: auto; }
+
+        ::-webkit-scrollbar { display: none; }
+
+        .glass-panel {
+            background: rgba(15, 15, 25, 0.65);
+            backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 50;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .pattern-card {
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            padding: 10px;
-            border: 1px solid rgba(255,255,255,0.04);
+
+        .ui-hidden {
+            transform: translateX(-125%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .action-button {
+            position: fixed;
+            z-index: 100;
+            cursor: pointer;
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .pattern-card:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(99, 102, 241, 0.4);
+
+        .eye-toggle { bottom: 24px; right: 24px; color: rgba(129, 140, 248, 0.5); background: rgba(255,255,255,0.05); }
+        .record-toggle { bottom: 24px; right: 84px; color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.05); }
+        
+        .eye-toggle:hover { color: #a5b4fc; background: rgba(255,255,255,0.15); transform: scale(1.1); }
+        .record-toggle:hover { color: #f87171; background: rgba(239, 68, 68, 0.15); transform: scale(1.1); }
+        .recording { animation: pulse 1.5s infinite; color: #ef4444 !important; background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        input[type="range"] {
-            accent-color: #818cf8;
+
+        .legend-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
+
+        .pattern-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+        .pattern-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+
+        .bar-container {
+            height: 170px;
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            padding: 10px 15px 35px 35px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            margin: 15px 0;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .y-axis {
+            position: absolute; left: 10px; bottom: 35px; height: calc(100% - 45px);
+            display: flex; flex-direction: column; justify-content: space-between;
+            font-size: 7px; color: #666; pointer-events: none; text-align: right; width: 20px;
+        }
+
+        .bar-wrapper { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+        .bar-item { width: 28px; position: relative; transition: height 0.15s cubic-bezier(0.33, 1, 0.68, 1); border-radius: 4px 4px 1px 1px; min-height: 2px; }
+        .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: bold; color: #a5b4fc; }
+        .bar-label { position: absolute; bottom: -24px; font-size: 8px; font-weight: 700; color: #777; letter-spacing: 0.05em; }
+
+        input[type="range"] { accent-color: #818cf8; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
+    <!-- Operation button (bottom right corner) -->
+    <div id="recordToggle" class="action-button record-toggle p-3 rounded-full shadow-2xl" title="Recording Animation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+
+    <div id="eyeToggle" class="action-button eye-toggle p-3 rounded-full shadow-2xl" title="Show/Hide Control Panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+
     <!-- UI Control Panel -->
-    <div class="fixed top-6 left-6 p-6 ui-panel rounded-[2rem] w-80">
-        <h1 class="text-xs font-bold tracking-[0.4em] uppercase mb-1 text-indigo-400">Neural Dynamic V5.0</h1>
-        <p class="text-[8px] text-gray-500 mb-6 tracking-widest uppercase italic">Resonance & Fluid Morphing</p>
+    <div id="mainPanel" class="fixed top-6 left-6 p-7 glass-panel rounded-[2.8rem] w-[24rem]">
+        <div class="flex justify-between items-start mb-1">
+            <h1 class="text-[11px] font-bold tracking-[0.5em] uppercase text-indigo-300">Brainwave Resonant Field</h1>
+            <span id="streamTime" class="text-[9px] text-indigo-200/70 font-bold bg-white/5 px-2 py-0.5 rounded-full">00:00:00</span>
+        </div>
+        <p class="text-[8px] text-gray-400 mb-6 tracking-[0.2em] uppercase italic opacity-60">EEG Status Mapping System by ZOE</p>
 
-        <div class="space-y-4">
-            <div>
-                <div class="flex justify-between text-[9px] mb-2 font-bold text-gray-400 uppercase">
-                    <span>Grid Density</span>
-                    <span id="resDisp">40px</span>
+        <div class="space-y-6">
+            <!-- Adjust the slider -->
+            <div class="grid grid-cols-2 gap-5">
+                <div>
+                    <div class="flex justify-between text-[8px] mb-2 font-bold text-gray-400 uppercase tracking-widest">
+                        <span>Density</span>
+                        <span id="resDisp" class="text-indigo-400">40px</span>
+                    </div>
+                    <input type="range" id="resolution" min="20" max="80" step="2" value="40" class="w-full appearance-none cursor-pointer">
                 </div>
-                <input type="range" id="resolution" min="20" max="80" step="2" value="40" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer">
+                <div>
+                    <div class="flex justify-between text-[8px] mb-2 font-bold text-gray-400 uppercase tracking-widest">
+                        <span>Gain</span>
+                        <span id="gainDisp" class="text-indigo-400">10.0</span>
+                    </div>
+                    <input type="range" id="dataGain" min="1" max="40" step="1" value="10" class="w-full appearance-none cursor-pointer">
+                </div>
             </div>
 
-            <div>
-                <div class="flex justify-between text-[9px] mb-2 font-bold text-gray-400 uppercase">
-                    <span>Power Gain</span>
-                    <span id="gainDisp">10.0</span>
+            <!-- Spectrum Analysis Bar Chart -->
+            <div class="relative">
+                <div class="bar-container">
+                    <div class="y-axis"><span>100</span><span>50</span><span>0</span></div>
+                    <div class="bar-wrapper"><div class="bar-item bg-[#4B0082]" id="bar-delta"><span class="bar-value" id="val-delta">0</span></div><span class="bar-label">DEL</span></div>
+                    <div class="bar-wrapper"><div class="bar-item bg-[#00CED1]" id="bar-theta"><span class="bar-value" id="val-theta">0</span></div><span class="bar-label">THE</span></div>
+                    <div class="bar-wrapper"><div class="bar-item bg-[#32CD32]" id="bar-alpha"><span class="bar-value" id="val-alpha">0</span></div><span class="bar-label">ALP</span></div>
+                    <div class="bar-wrapper"><div class="bar-item bg-[#FFD700]" id="bar-beta"><span class="bar-value" id="val-beta">0</span></div><span class="bar-label">BET</span></div>
+                    <div class="bar-wrapper"><div class="bar-item bg-white" id="bar-gamma"><span class="bar-value" id="val-gamma">0</span></div><span class="bar-label">GAM</span></div>
                 </div>
-                <input type="range" id="dataGain" min="1" max="40" step="1" value="10" class="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer">
             </div>
 
-            <div class="pt-2">
-                <label class="block w-full text-center py-4 rounded-2xl cursor-pointer transition bg-indigo-500/5 border border-indigo-500/20 hover:bg-indigo-500/15 group">
+            <!-- Isometric legend -->
+            <div class="legend-grid">
+                <div class="pattern-card">
+                    <div class="flex justify-center"><div class="w-3.5 h-3.5 rounded-full bg-[#4B0082] blur-[3px]"></div></div>
+                    <div class="text-[8px] font-bold text-gray-300 uppercase tracking-wider">DELTA: Restoration Shadow</div>
+                </div>
+                <div class="pattern-card">
+                    <div class="flex justify-center"><div class="w-4 h-1 bg-[#00CED1] scale-y-75 rounded-full shadow-[0_0_8px_rgba(0,206,209,0.4)]"></div></div>
+                    <div class="text-[8px] font-bold text-gray-300 uppercase tracking-wider">THETA: Ribbon Resonance</div>
+                </div>
+                <div class="pattern-card">
+                    <div class="flex justify-center"><div class="w-3.5 h-3.5 border-2 border-[#32CD32] rotate-45 shadow-[0_0_8px_rgba(50,205,50,0.3)]"></div></div>
+                    <div class="text-[8px] font-bold text-gray-300 uppercase tracking-wider">ALPHA: Ripple Lattice</div>
+                </div>
+                <div class="pattern-card">
+                    <div class="flex justify-center"><div class="w-4 h-1.5 bg-[#FFD700] skew-x-12 shadow-[0_0_8px_rgba(255,215,0,0.4)]"></div></div>
+                    <div class="text-[8px] font-bold text-gray-300 uppercase tracking-wider">BETA: Oscillatory Pulse</div>
+                </div>
+                <div class="pattern-card">
+                    <div class="flex justify-center"><div class="w-3.5 h-3.5 bg-white shadow-[0_0_12px_#FF4500]"></div></div>
+                    <div class="text-[8px] font-bold text-gray-300 uppercase tracking-wider">GAMMA: Insight Burst</div>
+                </div>
+            </div>
+
+            <!-- Data Control -->
+            <div class="pt-2 flex flex-col gap-3">
+                <label class="block w-full text-center py-4 rounded-2xl cursor-pointer transition bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 group">
                     <span id="uploadStatus" class="text-[9px] font-bold text-indigo-300 group-hover:text-white tracking-widest uppercase">
                         CONNECT DATA STREAM
                     </span>
                     <input type="file" id="csvFile" accept=".csv" class="hidden">
                 </label>
+                <button id="clearBtn" class="w-full py-3.5 bg-white/5 text-gray-400 text-[9px] hover:bg-red-500/10 hover:text-red-400 transition uppercase tracking-[0.4em] font-bold rounded-2xl border border-white/5">
+                    FLUSH BUFFER
+                </button>
             </div>
-
-            <!-- Pattern Guide -->
-            <div class="space-y-2 mt-4">
-                <div class="pattern-card flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-[#4B0082] blur-[2px]"></div>
-                    <div class="text-[9px] font-bold tracking-tighter">DELTA: Deep Flow Field / Restoration</div>
-                </div>
-                <div class="pattern-card flex items-center gap-3">
-                    <div class="w-3 h-3 bg-[#00CED1] scale-y-50"></div>
-                    <div class="text-[9px] font-bold tracking-tighter">THETA: Ribbon Resonance / Meditation</div>
-                </div>
-                <div class="pattern-card flex items-center gap-3">
-                    <div class="w-3 h-3 border border-[#32CD32] rotate-45"></div>
-                    <div class="text-[9px] font-bold tracking-tighter">ALPHA: Ripple Lattice / Relaxation</div>
-                </div>
-                <div class="pattern-card flex items-center gap-3">
-                    <div class="w-3 h-1 bg-[#FFD700] skew-x-12"></div>
-                    <div class="text-[9px] font-bold tracking-tighter">BETA: Oscillatory Pulse / Cognition</div>
-                </div>
-                <div class="pattern-card flex items-center gap-3">
-                    <div class="w-3 h-3 bg-white shadow-[0_0_8px_#FF4500]"></div>
-                    <div class="text-[9px] font-bold tracking-tighter">GAMMA: Quantum Burst / Insight</div>
-                </div>
-            </div>
-
-            <button id="clearBtn" class="w-full py-4 bg-indigo-600 text-white text-[9px] hover:bg-indigo-500 transition uppercase tracking-[0.2em] font-bold rounded-2xl shadow-xl mt-2">
-                Flush Buffer
-            </button>
         </div>
     </div>
 
@@ -113,26 +201,120 @@
         const csvFileInput = document.getElementById('csvFile');
         const uploadStatus = document.getElementById('uploadStatus');
         const clearBtn = document.getElementById('clearBtn');
+        const streamTimeEl = document.getElementById('streamTime');
+        const eyeToggle = document.getElementById('eyeToggle');
+        const recordToggle = document.getElementById('recordToggle');
+        const mainPanel = document.getElementById('mainPanel');
+
+        // Recording status
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        eyeToggle.onclick = () => mainPanel.classList.toggle('ui-hidden');
+
+        // Recording Logic
+        recordToggle.onclick = () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        };
+
+        function startRecording() {
+            recordedChunks = [];
+            const stream = canvas.captureStream(60); // 60 FPS
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `neural-matrix-${new Date().getTime()}.webm`;
+                a.click();
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordToggle.classList.add('recording');
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordToggle.classList.remove('recording');
+        }
+
+        const bars = {
+            Delta: document.getElementById('bar-delta'),
+            Theta: document.getElementById('bar-theta'),
+            Alpha: document.getElementById('bar-alpha'),
+            Beta: document.getElementById('bar-beta'),
+            Gamma: document.getElementById('bar-gamma')
+        };
+        const valLabels = {
+            Delta: document.getElementById('val-delta'),
+            Theta: document.getElementById('val-theta'),
+            Alpha: document.getElementById('val-alpha'),
+            Beta: document.getElementById('val-beta'),
+            Gamma: document.getElementById('val-gamma')
+        };
 
         let brainData = [];
         let dataIndex = 0;
-        let time = 0;
+        let time = 0; 
 
         function initCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ctx.fillStyle = '#050508';
+            ctx.fillStyle = '#020204';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function formatStreamTime(frames) {
+            const totalMs = frames * 100;
+            const mins = Math.floor(totalMs / 60000);
+            const secs = Math.floor((totalMs % 60000) / 1000);
+            const ms = totalMs % 1000;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${ms.toString().padStart(3, '0')}`;
+        }
+
+        function updateUI(row) {
+            streamTimeEl.innerText = formatStreamTime(dataIndex);
+            const gain = parseFloat(gainInput.value);
+
+            Object.keys(bars).forEach(key => {
+                const rawVal = row[key] || 0;
+                const heightPercent = Math.min((rawVal * (gain / 5)) * 8, 100); 
+                bars[key].style.height = `${heightPercent}%`;
+                valLabels[key].innerText = rawVal.toFixed(1);
+                
+                if (heightPercent > 5) {
+                    const color = getComputedStyle(bars[key]).backgroundColor;
+                    bars[key].style.boxShadow = `0 0 ${heightPercent/3}px ${color}`;
+                    valLabels[key].style.opacity = "1";
+                } else {
+                    bars[key].style.boxShadow = "none";
+                    valLabels[key].style.opacity = "0.3";
+                }
+            });
         }
 
         function drawNeuralV5(row) {
             const res = parseInt(resInput.value);
             const gain = parseFloat(gainInput.value);
-           
             document.getElementById('resDisp').innerText = res + "px";
             document.getElementById('gainDisp').innerText = gain.toFixed(1);
 
-            const samples = 15;
+            updateUI(row);
+
+            const samples = 18; 
             time += 0.05;
 
             for(let s=0; s<samples; s++) {
@@ -141,29 +323,31 @@
                 const centerX = tx + res/2;
                 const centerY = ty + res/2;
 
-                // 1. Delta: Dynamic Fluid Fog
+                // 1. DELTA: Restored Shadow Fog
                 let dVal = (row.Delta || 0) * gain;
                 if (dVal > 1) {
-                    const drift = Math.sin(time * 0.5) * 10;
-                    const g = ctx.createRadialGradient(centerX + drift, centerY, 0, centerX + drift, centerY, dVal * 15);
-                    g.addColorStop(0, 'rgba(75, 0, 130, 0.15)');
+                    ctx.save();
+                    const drift = Math.sin(time * 0.4) * 8;
+                    const g = ctx.createRadialGradient(centerX + drift, centerY, 0, centerX + drift, centerY, dVal * 18);
+                    g.addColorStop(0, 'rgba(75, 0, 130, 0.05)');
                     g.addColorStop(1, 'rgba(75, 0, 130, 0)');
                     ctx.fillStyle = g;
                     ctx.beginPath();
-                    ctx.arc(centerX + drift, centerY, dVal * 15, 0, Math.PI * 2);
+                    ctx.arc(centerX + drift, centerY, dVal * 18, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.restore();
                 }
 
-                // 2. Theta: Composite Ribbon Bundle
+                // 2. THETA: Ribbon Resonance
                 let tVal = (row.Theta || 0) * gain;
                 if (tVal > 2) {
                     ctx.strokeStyle = '#00CED1';
-                    ctx.lineWidth = 0.5;
-                    ctx.globalAlpha = 0.3;
-                    for(let r=0; r<3; r++) {
+                    ctx.lineWidth = 1; 
+                    ctx.globalAlpha = 0.35;
+                    for(let r=0; r<2; r++) {
                         ctx.beginPath();
                         for(let i=0; i<res; i++) {
-                            const phase = (time + r) * 2;
+                            const phase = (time + r) * 2.5;
                             const sinY = Math.sin((i / res) * Math.PI * 2 + phase) * tVal;
                             ctx.lineTo(tx + i, ty + res/2 + sinY);
                         }
@@ -171,62 +355,54 @@
                     }
                 }
 
-                // 3. Alpha: Expanding Ripples
+                // 3. ALPHA: Ripple Lattice
                 let aVal = (row.Alpha || 0) * gain;
                 if (aVal > 3) {
                     ctx.strokeStyle = '#32CD32';
-                    ctx.globalAlpha = 0.4;
-                    ctx.lineWidth = 1;
-                    const pulse = (time * 5) % (res * 0.8);
+                    ctx.globalAlpha = 0.45;
+                    ctx.lineWidth = 1.2;
+                    const pulse = (time * 6) % (res * 0.9);
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, pulse * (aVal/10), 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Stable diamond core
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY - 4);
-                    ctx.lineTo(centerX + 4, centerY);
-                    ctx.lineTo(centerX, centerY + 4);
-                    ctx.lineTo(centerX - 4, centerY);
-                    ctx.closePath();
-                    ctx.stroke();
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(time);
+                    ctx.strokeRect(-3, -3, 6, 6);
+                    ctx.restore();
                 }
 
-                // 4. Beta: High-Frequency Glitch Pulse
+                // 4. BETA: Oscillatory Pulse
                 let bVal = (row.Beta || 0) * gain;
                 if (bVal > 2) {
                     ctx.fillStyle = '#FFD700';
-                    ctx.globalAlpha = 0.6;
-                    const jitter = Math.sin(time * 20) * 2;
-                    const h = bVal * 6;
-                    ctx.fillRect(centerX - 1 + jitter, centerY - h/2, 2, h);
-
-                    if(bVal > 5) {
-                        ctx.globalAlpha = 0.2;
-                        ctx.fillRect(centerX - 6 + jitter, centerY - h/4, 1, h/2);
-                        ctx.fillRect(centerX + 6 + jitter, centerY - h/4, 1, h/2);
-                    }
+                    ctx.globalAlpha = 0.7;
+                    const jitter = Math.sin(time * 25) * 3;
+                    const h = bVal * 8;
+                    ctx.fillRect(centerX - 1.5 + jitter, centerY - h/2, 3, h);
                 }
 
-                // 5. Gamma: Spark Burst
+                // 5. GAMMA: Quantum Insight
                 let gVal = (row.Gamma || 0) * gain;
                 if (gVal > 1) {
+                    ctx.save();
                     ctx.fillStyle = '#fff';
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = 12;
                     ctx.shadowColor = '#FF4500';
                     ctx.globalAlpha = 1.0;
+                    const orbit = gVal * 2.5;
                     for(let p=0; p<4; p++) {
-                        const angle = time * 10 + (p * Math.PI/2);
-                        const px = centerX + Math.cos(angle) * gVal * 2;
-                        const py = centerY + Math.sin(angle) * gVal * 2;
-                        ctx.fillRect(px, py, 1.5, 1.5);
+                        const angle = time * 12 + (p * Math.PI/2);
+                        const px = centerX + Math.cos(angle) * orbit;
+                        const py = centerY + Math.sin(angle) * orbit;
+                        ctx.fillRect(px - 1, py - 1, 2, 2);
                     }
-                    ctx.shadowBlur = 0;
+                    ctx.restore();
                 }
             }
 
-            // Global fade layer
-            ctx.fillStyle = 'rgba(5, 5, 8, 0.015)';
+            ctx.fillStyle = 'rgba(2, 2, 4, 0.04)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
@@ -235,9 +411,11 @@
                 drawNeuralV5(brainData[dataIndex]);
                 dataIndex = (dataIndex + 1) % brainData.length;
             } else {
-                // Subtle idle background animation when no data
-                ctx.fillStyle = 'rgba(5, 5, 8, 0.05)';
+                ctx.fillStyle = 'rgba(2, 2, 4, 0.06)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                Object.values(bars).forEach(b => b.style.height = '2px');
+                Object.values(valLabels).forEach(l => l.innerText = "0");
+                streamTimeEl.innerText = "00:00:00";
             }
             requestAnimationFrame(animate);
         }
@@ -245,7 +423,7 @@
         csvFileInput.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            uploadStatus.innerText = "PARSING STREAM...";
+            uploadStatus.innerText = "SYNCING...";
             const reader = new FileReader();
             reader.onload = (event) => {
                 const lines = event.target.result.split('\n');
@@ -264,14 +442,22 @@
                     };
                 }).filter(d => !isNaN(d.Delta));
                 dataIndex = 0;
-                uploadStatus.innerText = "STREAM SYNCED";
-                uploadStatus.style.color = "#818cf8";
+                uploadStatus.innerText = "SYNC ACTIVE";
+                uploadStatus.classList.replace('text-indigo-300', 'text-green-400');
                 initCanvas();
             };
             reader.readAsText(file);
         };
 
-        clearBtn.onclick = initCanvas;
+        clearBtn.onclick = () => {
+            brainData = [];
+            dataIndex = 0;
+            uploadStatus.innerText = "CONNECT DATA STREAM";
+            uploadStatus.classList.add('text-indigo-300');
+            uploadStatus.classList.remove('text-green-400');
+            initCanvas();
+        };
+
         window.onresize = initCanvas;
         initCanvas();
         animate();
