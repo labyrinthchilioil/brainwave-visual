@@ -279,6 +279,75 @@
 
 
         /* ==========================================================
+        CSV IMPORT HANDLER
+        ----------------------------------------------------------
+        Reads and parses CSV file
+        Populates rawBrainData with EEG frame data
+        ========================================================== */
+
+        csvFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const csv = event.target.result;
+                    const lines = csv.split('\n');
+                    const header = lines[0].split(',').map(h => h.trim());
+                    
+                    rawBrainData = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = lines[i].split(',').map(v => parseFloat(v.trim()));
+                        const row = {};
+                        header.forEach((col, idx) => {
+                            row[col] = values[idx] || 0;
+                        });
+                        rawBrainData.push(row);
+                    }
+                    
+                    dataPointer = 0;
+                    lastTimestamp = 0;
+                    uploadStatus.innerText = `Loaded ${rawBrainData.length} frames`;
+                    console.log('CSV loaded successfully:', rawBrainData.length, 'frames');
+                } catch (error) {
+                    uploadStatus.innerText = 'Import failed';
+                    console.error('CSV parsing error:', error);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+
+        /* ==========================================================
+        CLEAR/RESET HANDLER
+        ----------------------------------------------------------
+        Resets all data and clears canvas
+        ========================================================== */
+
+        clearBtn.addEventListener('click', () => {
+            rawBrainData = [];
+            dataPointer = 0;
+            lastTimestamp = 0;
+            smoothedData = {
+                Delta: 0,
+                Theta: 0,
+                Alpha: 0,
+                Beta: 0,
+                Gamma: 0
+            };
+            history = [];
+            csvFileInput.value = '';
+            uploadStatus.innerText = 'Import CSV';
+            
+            ctx.fillStyle = '#f5f5f7';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+
+        /* ==========================================================
         NONLINEAR SIGNAL AMPLIFICATION
         ----------------------------------------------------------
         Applies gain and perceptual contrast shaping.
@@ -476,6 +545,13 @@
 
             requestAnimationFrame(animate);
         }
+
+        // Initialize canvas and start animation loop
+        initCanvas();
+        requestAnimationFrame(animate);
+
+        // Handle window resize
+        window.addEventListener('resize', initCanvas);
     </script>
 </body>
 </html>
