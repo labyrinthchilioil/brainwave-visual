@@ -9,6 +9,7 @@ A sedimented, structural mapping of EEG bands.
 Focuses on accumulation, layering, and spatialized behavior mapping.
 
 Access:
+
 Version 1.0: https://labyrinthchilioil.github.io/brainwave-visual/v1-matrix/v1.0-matrix/
 
 Version 1.2: https://labyrinthchilioil.github.io/brainwave-visual/v1-matrix/v1.1-matrix/
