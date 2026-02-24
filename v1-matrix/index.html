@@ -1,17 +1,16 @@
-function drawBehavioral() {
-    // Define grid size
-    var gridSize = 20;
-
-    // Calculate positions based on grid size
-    var x = Math.floor(Math.random() * gridCount) * gridSize;
-    var y = Math.floor(Math.random() * gridCount) * gridSize;
-
-    // Adjust element sizes to be multiples of grid size
-    var elementWidth = gridSize;
-    var elementHeight = gridSize;
-
-    // Code to draw visual elements using (x, y, elementWidth, elementHeight)
-    for (var i = 0; i < numElements; i++) {
-        drawElement(x, y, elementWidth, elementHeight);
-    }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainwave Behavioral Matrix</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Brainwave Behavioral Matrix Visualization</h1>
+    <div id="matrix">
+        <!-- Visualization content goes here -->
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
