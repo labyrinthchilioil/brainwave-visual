@@ -304,8 +304,8 @@
         function drawBehavioral() {
             const basePSize = parseInt(pixelSizeInput.value);
             const gain = parseFloat(gainInput.value);
-            
-            // Dynamic pixel size
+        
+            // Calculate total brainwave intensity and control dynamic pixel size
             let totalActivity = bandConfigs.reduce((sum, c) => sum + (smoothedData[c.id] || 0), 0);
             let intensityFactor = Math.max(0.1, Math.min(8.0, 0.5 + totalActivity * gain * 0.15));
             let targetPSize = basePSize * intensityFactor;
@@ -319,7 +319,6 @@
         
             updateSpectralMonitor();
         
-            // Map each brainwave
             bandConfigs.forEach(config => {
                 const val = (smoothedData[config.id] || 0) * gain;
                 if (val < 0.005) return;
@@ -328,40 +327,57 @@
                 const cy = config.y * canvas.height;
                 const spreadScale = val * 600;
         
-                // Align coordinates to grid
+                // Strictly gridded coordinates
                 const px = Math.round((cx + (Math.random() - 0.5) * spreadScale) / pSize) * pSize;
                 const py = Math.round((cy + (Math.random() - 0.5) * spreadScale) / pSize) * pSize;
         
                 ctx.fillStyle = config.color;
         
                 switch(config.type) {
-                    case 'cloud':
+                    case 'cloud': // Delta: Large square
                         ctx.globalAlpha = 0.15;
-                        const s = Math.round((val * 150) / pSize) * pSize;
+                        let s = Math.max(1, Math.round((val * 150) / pSize) * pSize);
                         ctx.fillRect(px - s/2, py - s/2, s, s);
                         break;
-                    case 'ink':
+        
+                    case 'ink': // Theta: Circle
                         ctx.globalAlpha = 0.25;
-                        const r = Math.round((val * 60) / pSize) * pSize;
+                        let r = Math.max(1, Math.round((val * 60) / pSize) * pSize);
                         ctx.beginPath();
                         ctx.arc(px, py, r, 0, Math.PI*2);
                         ctx.fill();
                         break;
-                    case 'grid':
+        
+                    case 'grid': // Alpha: horizontal bar
                         ctx.globalAlpha = 0.4;
-                        const aw = Math.round((val * 120) / pSize) * pSize;
+                        let aw = Math.max(1, Math.round((val * 120) / pSize) * pSize);
                         ctx.fillRect(px - aw/2, py, aw, pSize);
                         break;
-                    case 'scratch':
+        
+                    case 'scratch': // Beta: Vertical bar
                         ctx.globalAlpha = 0.5;
-                        const bh = Math.round((val * 100) / pSize) * pSize;
-                        ctx.fillRect(px, py - bh/2, Math.max(1, pSize/2), bh);
+                        let bh = Math.max(1, Math.round((val * 100) / pSize) * pSize);
+                        ctx.fillRect(px, py - bh/2, Math.max(1, Math.round(pSize/2)), bh);
                         break;
-                    case 'flash':
+        
+                    case 'flash': // Gamma: dotted
                         ctx.globalAlpha = 0.8;
-                        const fs = Math.max(2, Math.round(pSize / 3));
-                        ctx.fillRect(px, py, fs, fs);
-                        if(val > 2) ctx.fillRect(px + pSize, py - pSize, fs, fs);
+        
+                        // Dynamic size, minimum 20px, ensuring grid multiple.
+                        let fs = Math.max(20, Math.round((val * 10)) ); // The larger the val, the larger the dot.
+                        fs = Math.round(fs / pSize) * pSize;
+        
+                        // Strict alignment of principal points
+                        const fx = Math.round(px / pSize) * pSize;
+                        const fy = Math.round(py / pSize) * pSize;
+                        ctx.fillRect(fx, fy, fs, fs);
+        
+                        // Additional flash points are also gridded
+                        if(val > 2) {
+                            const fx2 = Math.round((px + pSize) / pSize) * pSize;
+                            const fy2 = Math.round((py - pSize) / pSize) * pSize;
+                            ctx.fillRect(fx2, fy2, fs, fs);
+                        }
                         break;
                 }
             });
